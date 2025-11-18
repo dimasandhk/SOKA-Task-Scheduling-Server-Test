@@ -33,21 +33,6 @@ Struktur repository telah dirancang modular, terdiri dari:
 
 ## 1. Overview Sistem
 
-Sistem scheduler ini membaca daftar task dengan parameter:
-
-- `cpu_load`
-- `ram_mb`
-- `task_idx`
-- `kategori` (jika ada)
-
-Kemudian AOA akan menentukan VM mana yang paling optimal untuk setiap task berdasarkan:
-
-- jumlah CPU core
-- kapasitas RAM
-- estimasi waktu eksekusi
-- density & volume per iterasi
-- greedy selection improvement
-
 Hasil akhir berupa file `aoa_results.csv` yang berisi jadwal lengkap dengan kolom:
 
 - `index`: Indeks task
