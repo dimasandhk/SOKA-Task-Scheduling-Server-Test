@@ -68,6 +68,53 @@ for t in range(iterations):
 
 Implementasi lengkap ada di `aoa_algorithm.py`.
 
+## 5. Arsitektur dan Alur Kerja Algoritma AOA untuk Penjadwanalan Tugas
+
+### 5.1. Pemodelan Masalah
+
+Setiap elemen dalam masalah penjadwanalan dipetakan ke konsep fisika yang digunakan oleh AOA, seperti yang ditunjukkan pada tabel berikut:
+
+| Konsep Fisika AOA             | Implementasi pada Penjadwanalan Tugas                                             |
+| :---------------------------- | :-------------------------------------------------------------------------------- |
+| **Benda (Object)**            | Sebuah **Solusi Jadwal** (kandidat pemetaan semua tugas ke VM).                   |
+| **Posisi Benda**              | **Vektor Solusi**. Sebuah array di mana `vektor[i]` adalah ID VM untuk `tugas_i`. |
+| **Cairan**                    | **Ruang Pencarian (Search Space)**, yaitu semua kemungkinan kombinasi jadwal.     |
+| **Kualitas Sifat Fisik**      | **Kualitas Solusi**. Direpresentasikan oleh:                                      |
+| &nbsp;&nbsp;&nbsp;_- Density_ | Dihitung dari **invers nilai fitness**. Fitness rendah (baik) -> Density tinggi.  |
+| &nbsp;&nbsp;&nbsp;_- Volume_  | Dihitung dari komponen vektor solusi.                                             |
+| **Keadaan Setimbang**         | **Solusi Optimal**, yaitu jadwal dengan **Makespan terendah**.                    |
+
+### 5.2. Fungsi Fitness: Mengukur Kualitas Jadwal
+
+Tujuan utama algoritma adalah meminimalkan **Makespan**. Fungsi fitness kami, `calculate_estimated_makespan`, menghitung estimasi makespan dengan cara:
+
+1.  Untuk setiap VM, total beban dihitung dengan menjumlahkan estimasi waktu eksekusi setiap tugas yang dialokasikan padanya.
+2.  Estimasi waktu eksekusi sebuah tugas pada VM tertentu dihitung berdasarkan:
+
+    `estimated_time = (task.cpu_load / vm.cpu_cores) + (task.ram_mb / (vm.ram_gb * 1024))`
+
+3.  **Makespan** adalah nilai maksimum dari total beban di antara semua VM. Algoritma AOA akan terus mencari jadwal yang menghasilkan nilai ini serendah mungkin.
+
+### 5.3. Fase Pencarian dalam AOA
+
+Algoritma secara dinamis menyeimbangkan dua perilaku pencarian untuk menemukan solusi optimal:
+
+**1. Fase Eksplorasi (Iterasi Awal: `t < max_iter / 2`)**
+
+- **Tujuan:** Menjelajahi sebanyak mungkin area di ruang pencarian untuk menghindari _local optima_.
+- **Mekanisme:** Posisi sebuah solusi diperbarui dengan mempertimbangkan "tabrakan" dengan solusi **acak** lainnya. Hal ini menciptakan pergerakan yang divergen dan mendorong penemuan area-area baru.
+
+  `# Gerakan dipengaruhi oleh percepatan yang didasarkan pada solusi acak`
+  `new_vector[d] = population[i][d] + C1 * r1 * acc`
+
+**2. Fase Eksploitasi (Iterasi Akhir: `t >= max_iter / 2`)**
+
+- **Tujuan:** Menyempurnakan solusi di sekitar wilayah terbaik yang telah ditemukan.
+- **Mekanisme:** Posisi sebuah solusi diperbarui dengan bergerak menuju **solusi terbaik global** (`best_solution_vector`). Pergerakan ini bersifat konvergen, memfokuskan pencarian pada area yang paling menjanjikan.
+
+  `# Gerakan ditarik menuju solusi terbaik yang pernah ada`
+  `new_vector[d] = best_solution_vector[d] + C2 * r2 * T_F * (best_solution_vector[d] - population[i][d])`
+
 ## 3. Cara Menjalankan
 
 ### 1. Clone Repository
@@ -187,8 +234,6 @@ Beberapa task mengalami waiting (karena antrian VM4):
 | task-1-11  | vm3 | 11.688463 | 13.078 | 24.76234  | 11.672 |
 
 Sementara task lain mostly 0 waiting time karena dialokasikan ke VM yang lebih seimbang (vm1–vm3).
-
-## 5. Format Output (aoa_results.csv)
 
 File output memiliki format CSV dengan header:
 
